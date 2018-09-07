@@ -22,4 +22,4 @@
 /nbbuild/
 /dist/
 /nbdist/
-/.nb-gradle/!maven-wrapper.jar
+/.nb-gradle/
