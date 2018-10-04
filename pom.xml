@@ -59,6 +59,18 @@
 			<artifactId>flyway-core</artifactId>
 		</dependency>
 		
+		<!-- hibernate validator -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>			
+		</dependency>		
+		
+		<!-- Spring security -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>			
+		</dependency>
+		
 		<!-- Spring security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
