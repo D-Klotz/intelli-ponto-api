@@ -8,6 +8,7 @@ import java.util.Optional;
 import javax.print.attribute.standard.RequestingUserName;
 import javax.validation.Valid;
 
+import org.apache.commons.lang3.EnumUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.klotz.intelliponto.api.dtos.LancamentoDto;
 import com.klotz.intelliponto.api.entities.Funcionario;
 import com.klotz.intelliponto.api.entities.Lancamento;
+import com.klotz.intelliponto.api.enums.TipoEnum;
 import com.klotz.intelliponto.api.response.Response;
 import com.klotz.intelliponto.api.services.FuncionarioService;
 import com.klotz.intelliponto.api.services.LancamentoService;
@@ -134,24 +138,82 @@ public class LancamentoController {
 	 * @param lancamentoDto
 	 * @return ResponseEntity<Response<LancamentoDto>>
 	 * @throws ParseException
-	 *//*
-	@PostMapping(value="/{id}")
+	 */
+	@PutMapping(value="/{id}")
 	public ResponseEntity<Response<LancamentoDto>> atualizar(@PathVariable("id") Long id,
 			@Valid @RequestBody LancamentoDto lancamentoDto, BindingResult result) throws ParseException {
+		log.info("Atualizando lançamento: {}", lancamentoDto.toString());
+		Response<LancamentoDto> response = new Response<LancamentoDto>();
+		validarFuncionario(lancamentoDto, result);
+		lancamentoDto.setId(Optional.of(id));
+		Lancamento lancamento = this.converterDtoParaLancamento(lancamentoDto, result);
 		
+		if (result.hasErrors()) {
+			log.info("Erro validando lancamento: {}", lancamento);
+			result.getAllErrors().forEach(err -> response.getErrors().add(err.getDefaultMessage()));
+			return ResponseEntity.badRequest().body(response);
+		}
 		
-	}*/
+		lancamento = this.lancamentoService.persistir(lancamento);
+		response.setData(this.converterLancamentosDto(lancamento));
+		return ResponseEntity.ok(response);
+	}
 	
 	/**
-	 * Converte um lancamentoDTO para um lancamento
+	 * Remove um lancamento dado um id
+	 * @param id
+	 * @return 
+	 */
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Response<String>> remover(@PathVariable("id") Long id) {
+		log.info("Removendo lancamento: {}", id);
+		Response<String> response = new Response<String>();
+		Optional<Lancamento> lancamento = this.lancamentoService.buscarPorId(id);
+		
+		if (!lancamento.isPresent()) {
+			log.info("Error ao demover devido ao lancamento Id: {} ser inválido", id);
+			response.getErrors().add("Erro ao remover lancamento. Lancamento não encontrado para o id:" + id);
+			return ResponseEntity.badRequest().body(response);
+		}
+		
+		this.lancamentoService.remover(id);
+		return ResponseEntity.ok(new Response<String>());
+	}
+	
+	/**
+	 * Converte um lancamentoDTO para uma entidade de lancamento
 	 * 
 	 * @param lancamentoDto
 	 * @param result
 	 * @return Lancamento
+	 * @throws ParseException 
 	 */
-	private Lancamento converterDtoParaLancamento(LancamentoDto lancamentoDto, BindingResult result) {
-		// TODO Auto-generated method stub
-		return null;
+	private Lancamento converterDtoParaLancamento(LancamentoDto lancamentoDto, BindingResult result) throws ParseException {
+		Lancamento lancamento = new Lancamento();
+		
+		if (lancamentoDto.getId().isPresent()) {
+			Optional<Lancamento> lanc = this.lancamentoService.buscarPorId(lancamentoDto.getId().get());
+			if (lanc.isPresent()) {
+				lancamento = lanc.get();
+			} else {
+				result.addError(new ObjectError("lancamento", "Lancamento não encontrado"));
+			}
+		} else {
+			lancamento.setFuncionario(new Funcionario());
+			lancamento.getFuncionario().setId(lancamentoDto.getFuncionarioId());
+		}
+		
+		lancamento.setDescricao(lancamentoDto.getDescricao());
+		lancamento.setLocalizacao(lancamentoDto.getLocalizacao());
+		lancamento.setData(this.dateFormat.parse(lancamentoDto.getData()));
+		
+		if (EnumUtils.isValidEnum(TipoEnum.class, lancamentoDto.getTipo())) {
+			lancamento.setTipo(TipoEnum.valueOf(lancamentoDto.getTipo()));
+		} else {
+			result.addError(new ObjectError("tipo", "Tipo inválido"));
+		}
+
+		return lancamento;
 	}
 
 	/**
