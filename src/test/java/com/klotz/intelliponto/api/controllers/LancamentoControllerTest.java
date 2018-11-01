@@ -7,7 +7,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Optional;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.BDDMockito;
@@ -17,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -46,7 +46,7 @@ public class LancamentoControllerTest {
 	@MockBean
 	private FuncionarioService funcionarioService;
 	
-	private static final String URL_BASE = "/api/lancamentos/";
+	private static final String URL_BASE = "/api/lancamento/";
 	private static final Long ID_FUNCIONARIO = 1L;
 	private static final Long ID_LANCAMENTO = 1L;
 	private static final String TIPO = TipoEnum.INICIO_TRABALHO.name();
@@ -54,8 +54,8 @@ public class LancamentoControllerTest {
 	
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
-	@Ignore
 	@Test
+	@WithMockUser
 	public void testCadastrarLancamento() throws Exception {
 		Lancamento lancamento = obterDadosLancamento();
 		BDDMockito.given(this.funcionarioService.buscarPorId(Mockito.anyLong())).willReturn(Optional.of(new Funcionario()));
@@ -73,8 +73,8 @@ public class LancamentoControllerTest {
 				.andExpect(jsonPath("$.errors").isEmpty());
 	}
 	
-	@Ignore
 	@Test
+	@WithMockUser
 	public void testCadastrarLancamentoFuncionarioIdInvalido() throws Exception {
 		BDDMockito.given(this.funcionarioService.buscarPorId(Mockito.anyLong())).willReturn(Optional.empty());
 		
@@ -83,18 +83,28 @@ public class LancamentoControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$errors").value("Funcionario não encontrato. ID inexistente."))
+				.andExpect(jsonPath("$.errors").value("Funcionario não encontrado, Id inexistente."))
 				.andExpect(jsonPath("$.data").isEmpty());
 	}
 	
-	@Ignore
 	@Test
+	@WithMockUser(username="admin@admin.com", roles= {"ADMIN"})
 	public void testRemoverLancamento() throws Exception {
 			BDDMockito.given(this.lancamentoService.buscarPorId(Mockito.anyLong())).willReturn(Optional.of(new Lancamento()));
 			
 			mockMvc.perform(MockMvcRequestBuilders.delete(URL_BASE + ID_LANCAMENTO)
 					.accept(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk());
+	}
+	
+	@Test
+	@WithMockUser
+	public void testRemoverLancamentoAcessoNegado() throws Exception {
+			BDDMockito.given(this.lancamentoService.buscarPorId(Mockito.anyLong())).willReturn(Optional.of(new Lancamento()));
+			
+			mockMvc.perform(MockMvcRequestBuilders.delete(URL_BASE + ID_LANCAMENTO)
+					.accept(MediaType.APPLICATION_JSON))
+					.andExpect(status().isForbidden());
 	}
 
 	

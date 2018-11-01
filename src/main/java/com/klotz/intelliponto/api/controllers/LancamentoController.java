@@ -1,11 +1,9 @@
 package com.klotz.intelliponto.api.controllers;
 
-import java.awt.image.DirectColorModel;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Optional;
 
-import javax.print.attribute.standard.RequestingUserName;
 import javax.validation.Valid;
 
 import org.apache.commons.lang3.EnumUtils;
@@ -17,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -164,6 +163,7 @@ public class LancamentoController {
 	 * @param id
 	 * @return 
 	 */
+	@PreAuthorize("hasAnyRole('ADMIN')")
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Response<String>> remover(@PathVariable("id") Long id) {
 		log.info("Removendo lancamento: {}", id);
