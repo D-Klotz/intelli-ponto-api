@@ -34,7 +34,7 @@ public class LancamentoServiceImpl implements LancamentoService {
 		return this.lancamentoRepository.findById(id);
 	}
 	
-	@CachePut
+	@CachePut("lancamentoPorId")
 	public Lancamento persistir(Lancamento lancamento) {
 		log.info("Persistindo lancamento {}", lancamento);
 		return this.lancamentoRepository.save(lancamento);
