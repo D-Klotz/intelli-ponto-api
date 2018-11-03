@@ -9,8 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 
 import com.klotz.intelliponto.api.security.utils.JwtTokenUtil;
 
-import springfox.documentation.RequestHandler;
 import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.spi.DocumentationType;
@@ -30,7 +30,7 @@ public class SwaggerConfig {
 	 @Autowired
 	 private UserDetailsService userDetailsService;
 	
-	 @Bean
+	@Bean
 	 public Docket api() {
 	  return new Docket(DocumentationType.SWAGGER_2).select()
 	   .apis(RequestHandlerSelectors.basePackage("com.klotz.intelliponto.api.controllers"))
