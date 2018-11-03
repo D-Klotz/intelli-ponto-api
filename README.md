@@ -14,6 +14,7 @@ API do sistema IntelliPonto, este sistema processa e armazena os registros de en
 - EhCache
 
 # Executando o projeto
+- Na raiz do projeto execute o comando **mvn install**
 - Na raiz do projeto execute o comando **java -jar target\IntelliPonto-0.0.1-SNAPSHOT.jar**
 
 # Atenticação JWT
